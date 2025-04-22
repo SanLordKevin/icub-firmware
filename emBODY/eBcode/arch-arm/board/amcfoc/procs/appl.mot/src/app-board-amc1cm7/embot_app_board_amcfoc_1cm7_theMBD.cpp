@@ -906,7 +906,6 @@ bool embot::app::board::amcfoc::cm7::theMBD::Impl::tick(const std::vector<embot:
 
     
     volatile float vin = embot::hw::analog::getVin();
-    vin = 48.0f;
     
     embot::app::bldc::theMC2agent::getInstance().tick(caninputframes, {EXTFAULTisPRESSED, vin}, canoutputframes);
     
@@ -1169,6 +1168,10 @@ void embot::app::board::amcfoc::cm7::theMBD::Impl::FOC(embot::hw::MOTOR m)
         float u = _items[embot::core::tointegral(m)].pwm.u;
         float v = _items[embot::core::tointegral(m)].pwm.v;
         float w = _items[embot::core::tointegral(m)].pwm.w;
+            
+        u = 0;
+        v = 0;
+        w = 5;
         
 //        // wvu
 //        _items[embot::core::tointegral(m)].pwm.u = w;

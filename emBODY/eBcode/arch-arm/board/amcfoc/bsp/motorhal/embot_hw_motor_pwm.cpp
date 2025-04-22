@@ -19,6 +19,12 @@
 #include "embot_core.h"
 #include <array>
 
+#if defined(USE_STM32HAL)
+    #include "stm32hal.h"
+#else
+    #warning this implementation is only for stm32hal
+#endif
+
 // --------------------------------------------------------------------------------------------------------------------
 // - configuration of peripherals and chips. it is done board by board. it contains a check vs correct STM32HAL_BOARD_*
 // --------------------------------------------------------------------------------------------------------------------
@@ -422,10 +428,12 @@ namespace embot::hw::motor::pwm::bsp {
         {
             /* Must be atomic */
  //           taskDISABLE_INTERRUPTS();
-            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_1, ph1);
-            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_2, ph2);
-            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_3, ph3);
-            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_4, MAX_PWM_10PERC);  // SYNC FOR SPEEDGOAT
+            __disable_irq();
+            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_2, (uint32_t) 0x4D);
+            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_1, (uint32_t) 0);
+            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_3, (uint32_t) 0);
+//            __HAL_TIM_SetCompare(&embot::hw::motor::bldc::bsp::amcfoc::cm7::htimMOT1, TIM_CHANNEL_4, MAX_PWM_10PERC);  // SYNC FOR SPEEDGOAT
+            __enable_irq();
 //            taskENABLE_INTERRUPTS();
         }
         /* Set motor #2 */
