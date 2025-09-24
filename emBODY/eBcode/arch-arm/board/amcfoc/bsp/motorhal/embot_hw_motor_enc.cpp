@@ -400,13 +400,13 @@ float angle(embot::hw::MOTOR m)
 {
     float r = 0.0;
     
-    if (0 == embot::core::tointegral(m))
+    if (embot::hw::MOTOR::one == m)
     {          
         //check this conversion
         int32_t anglenew = __HAL_TIM_GetCounter(&htimEnc1);
         r = static_cast <float> (anglenew)*_enc_internals._items[embot::core::tointegral(m)].conversionfactor;
     }
-    else if (1 == embot::core::tointegral(m))
+    else if (embot::hw::MOTOR::two == m)
     {
         int32_t anglenew = __HAL_TIM_GetCounter(&htimEnc2);
         r = static_cast <float> (anglenew)*_enc_internals._items[embot::core::tointegral(m)].conversionfactor;
