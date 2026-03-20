@@ -168,20 +168,26 @@ namespace embot::hw::dualcore {
 
     bool init()
     {
+        const Config &cfg = embot::hw::dualcore::bsp::getBSP().config();
+        if(embot::hw::dualcore::Config::HW::forceinit == cfg.hw)
+        {
+            embot::hw::dualcore::bsp::getBSP().init();
+        }
+         SystemCoreClockUpdate();
+        
         if(false == supported())
         {
             return false;
         }
-        const Config &cfg = embot::hw::dualcore::bsp::getBSP().config();
         
+        return true;
         embot::hw::dualcore::CORE co = embot::hw::dualcore::bsp::getBSP().getPROP()->core;
         embot::hw::dualcore::BOOT bo = embot::hw::dualcore::bsp::getBSP().getPROP()->boot;
         embot::hw::MTX mtx = embot::hw::dualcore::bsp::getBSP().getPROP()->mtx;
         uint32_t hsem = embot::core::tointegral(mtx);
         
         uint32_t other_RCC_BOOT_Cx = (embot::hw::dualcore::CORE::cm7 == co) ? RCC_BOOT_C2 : RCC_BOOT_C1;
-        bool IamMaster = ((embot::hw::dualcore::CORE::cm7 == co) && (embot::hw::dualcore::BOOT::cm7master == bo)) ||
-                         ((embot::hw::dualcore::CORE::cm4 == co) && (embot::hw::dualcore::BOOT::cm4master == bo));
+        bool IamMaster = true;
                      
 #if 1
         if(true == IamMaster)

@@ -109,33 +109,5 @@ bool embot::hw::bsp::specialize() { return true; }
 #endif  //EMBOT_ENABLE_hw_bsp_specialize
     
     
-    
-//extern "C"
-//{
-
-//    void HAL_MspInit(void)
-//    {
-////        /** Enable the VREF clock
-////        */
-////        __HAL_RCC_VREF_CLK_ENABLE();
-
-////        /** Configure the internal voltage reference buffer voltage scale
-////        */
-////        HAL_SYSCFG_VREFBUF_VoltageScalingConfig(SYSCFG_VREFBUF_VOLTAGE_SCALE0);
-
-////        /** Enable the Internal Voltage Reference buffer
-////        */
-////        HAL_SYSCFG_EnableVREFBUF();
-
-////        /** Configure the internal voltage reference buffer high impedance mode
-////        */
-////        HAL_SYSCFG_VREFBUF_HighImpedanceConfig(SYSCFG_VREFBUF_HIGH_IMPEDANCE_DISABLE);        
-//    }
-
-//}    
-
-
-
-
 // - end-of-file (leave a blank line after)----------------------------------------------------------------------------
 

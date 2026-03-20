@@ -177,7 +177,7 @@ namespace embot::hw::motor::bldc {
         // prepare the hw environment. something such as prepare GPIOs, TIMs, ADC, link them together, etc.
         // and something else that embot::hw::motor::init() does inside s_hw_init()
         embot::hw::motor::bldc::bsp::getBSP().init(m);                           
-        
+        return r;
         // load config etc
         s_privatedata.data[embot::core::tointegral(m)].config = cfg;
       
@@ -194,7 +194,7 @@ namespace embot::hw::motor::bldc {
             configure(m, cfg);
         } 
         
-        return r;        
+                
     }
   
     

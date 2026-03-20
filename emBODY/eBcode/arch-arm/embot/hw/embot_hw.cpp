@@ -56,6 +56,10 @@ namespace embot { namespace hw {
     
     bool init(const Config &config)
     {
+        
+        embot::hw::bsp::init(config);
+
+        return true;
         if(true == embot::hw::initialised())
         {
             return true;

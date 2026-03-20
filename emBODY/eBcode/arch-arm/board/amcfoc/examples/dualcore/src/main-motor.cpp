@@ -71,7 +71,7 @@
 
 
 
-embot::app::scope::Signal *signal {nullptr};
+//embot::app::scope::Signal *signal {nullptr};
 constexpr embot::os::Event evtTick = embot::core::binary::mask::pos2mask<embot::os::Event>(0);
 constexpr embot::core::relTime tickperiod = 1000*embot::core::time1millisec;
 
@@ -122,7 +122,7 @@ void test_HW_onevent(embot::os::Thread *t, embot::os::EventMask eventmask, void 
 #include "embot_hw_motor.h"
 #include "embot_hw_motor_bldc.h"
 
-void ON(){};
+//void ON(){};
 
 void eventbasedthread_startup(embot::os::Thread *t, void *param)
 {   
@@ -132,8 +132,8 @@ void eventbasedthread_startup(embot::os::Thread *t, void *param)
    
     embot::core::print("mainthread-startup: started timer which sends evtTick to evthread every = " + embot::core::TimeFormatter(tickperiod).to_string());    
 
-    constexpr embot::app::scope::SignalEViewer::Config cc{ON, embot::app::scope::SignalEViewer::Config::LABEL::one};
-    signal = new embot::app::scope::SignalEViewer(cc);    
+//    constexpr embot::app::scope::SignalEViewer::Config cc{ON, embot::app::scope::SignalEViewer::Config::LABEL::one};
+//    signal = new embot::app::scope::SignalEViewer(cc);    
 
 #if defined(ENABLE_SPEED_TESTS) 
     test_SPEED_init(t, param);
@@ -164,11 +164,11 @@ void eventbasedthread_onevent(embot::os::Thread *t, embot::os::EventMask eventma
     if(true == embot::core::binary::mask::check(eventmask, evtTick)) 
     {
                
-        signal->on();   
+//        signal->on();   
 #if defined(ENABLE_SPEED_TESTS) 
     test_SPEED_onevent(t, eventmask, param);
 #endif        
-        signal->off();   
+//        signal->off();   
         
 #if defined(ENABLE_HW_TESTS)   
     test_HW_onevent(t, eventmask, param);        
@@ -230,8 +230,8 @@ void initSystem(embot::os::Thread *t, void* initparam)
         embot::core::print("LED::one will blink @ 1 Hz");
         
         
-            embot::hw::motor::bldc::init(embot::hw::MOTOR::one, {});
-//    embot::hw::motor::bldc::init(embot::hw::MOTOR::two, {});
+        embot::hw::motor::bldc::init(embot::hw::MOTOR::one, {});
+        embot::hw::motor::bldc::init(embot::hw::MOTOR::two, {});
         
         
     }

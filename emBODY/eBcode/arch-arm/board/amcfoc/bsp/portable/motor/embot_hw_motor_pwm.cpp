@@ -33,6 +33,7 @@
 namespace embot::hw::motor::pwm::bsp {
     
     bool PwmInit(void);
+    void PwmDeInit(void);
 
 //    #define PWM_MOTOR_NONE              (0x00000000UL)
     static constexpr auto PWM_MOTOR_1 = 0x00000001UL;
@@ -126,7 +127,7 @@ void init(embot::hw::MOTOR m, const Configuration &config)
 void deinit(embot::hw::MOTOR m)
 {
     _pwm_internals._items[embot::core::tointegral(m)].started = false;
-//    bsp::PwmDeInit();   
+//     bsp::PwmDeInit();   
 }
 
 
@@ -318,25 +319,25 @@ namespace embot::hw::motor::pwm::bsp {
 
         // cosi' ho le fasi dei due motori opposte. e gli update accadono allo stesso tempo ma per il mot 1 si ha undeflow e per il mot 2 overflow e vice versa
         /* Configure motor 1 PWM */
-        /* Start PWM counter from 512 in up direction. First sample when PWM pulse is LOW */
+        /* Start PWM counter from 512 in down direction. First sample when PWM pulse is LOW */
         uint32_t offsetMOT1 = 512;
         #if defined(SHIFT_comp)
         offsetMOT1 = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod()/2;
         #endif     
-        //Set PWM/timer counter and upcounting direction        
+        //Set PWM/timer counter and downward counting direction
         __HAL_TIM_SetCounter(&embot::hw::motor::bldc::bsp::amcfoc::htimMOT1, offsetMOT1);
         embot::hw::motor::bldc::bsp::amcfoc::htimMOT1.Instance->CR1 = (embot::hw::motor::bldc::bsp::amcfoc::htimMOT1.Instance->CR1 & ~TIM_CR1_CMS);
-        embot::hw::motor::bldc::bsp::amcfoc::htimMOT1.Instance->CR1 = (embot::hw::motor::bldc::bsp::amcfoc::htimMOT1.Instance->CR1 & ~TIM_CR1_DIR) | TIM_CR1_CMS_0;
+        embot::hw::motor::bldc::bsp::amcfoc::htimMOT1.Instance->CR1 = (embot::hw::motor::bldc::bsp::amcfoc::htimMOT1.Instance->CR1 | TIM_CR1_DIR ) | TIM_CR1_CMS_0;
         /* Configure motor 2 PWM */
-        /* Start PWM counter from 512 in down direction. First sample when PWM pulse is HIGH */
+        /* Start PWM counter from 512 in up direction. First sample when PWM pulse is HIGH */
         uint32_t offsetMOT2 = 512;
         #if defined(SHIFT_comp)
         offsetMOT2 = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod()/2;
         #endif
-        //Set PWM/timer counter and downward counting direction
+        //Set PWM/timer counter and upcounting direction
         __HAL_TIM_SetCounter(&embot::hw::motor::bldc::bsp::amcfoc::htimMOT2, offsetMOT2);
         embot::hw::motor::bldc::bsp::amcfoc::htimMOT2.Instance->CR1 = (embot::hw::motor::bldc::bsp::amcfoc::htimMOT2.Instance->CR1 & ~TIM_CR1_CMS);
-        embot::hw::motor::bldc::bsp::amcfoc::htimMOT2.Instance->CR1 = (embot::hw::motor::bldc::bsp::amcfoc::htimMOT2.Instance->CR1 | TIM_CR1_DIR ) | TIM_CR1_CMS_0;
+        embot::hw::motor::bldc::bsp::amcfoc::htimMOT2.Instance->CR1 = (embot::hw::motor::bldc::bsp::amcfoc::htimMOT2.Instance->CR1 & ~TIM_CR1_DIR) | TIM_CR1_CMS_0;
 
 // cosi' ho gli update equispaziati
 //        uint32_t offsetMOTslave = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod()/2;
@@ -382,8 +383,6 @@ namespace embot::hw::motor::pwm::bsp {
         HAL_TIM_Base_Start(&embot::hw::motor::bldc::bsp::amcfoc::htimMOT1);
         HAL_TIM_Base_Start(&embot::hw::motor::bldc::bsp::amcfoc::htimMOT2);
         
-//        __HAL_TIM_ENABLE_IT(&embot::hw::motor::bldc::bsp::amcfoc::htimMOT1, TIM_IT_UPDATE);
-//        __HAL_TIM_ENABLE_IT(&embot::hw::motor::bldc::bsp::amcfoc::htimMOT2, TIM_IT_UPDATE);
         
         return true;
     }

@@ -96,6 +96,16 @@ namespace embot::hw::motor::bldc::bsp::amcfoc {
 #include "embot_hw_motor_pwm.h" 
 #include "embot_hw_analog.h"
 
+
+
+#include "embot_app_scope.h"
+
+
+embot::app::scope::Signal *signal {nullptr};
+embot::app::scope::Signal *signal_emb {nullptr};
+void ON(){};
+void embot_init(){};
+
 namespace embot::hw::motor::bldc::bsp {
                   
     constexpr PROP propM1 { 0 };
@@ -133,37 +143,50 @@ namespace embot::hw::motor::bldc::bsp {
     
     bool BSP::init(embot::hw::MOTOR m) const 
     {  
+        constexpr embot::app::scope::SignalEViewer::Config cc{ON, embot::app::scope::SignalEViewer::Config::LABEL::one};
+        signal = new embot::app::scope::SignalEViewer(cc); 
+        constexpr embot::app::scope::SignalEViewer::Config ff{embot_init, embot::app::scope::SignalEViewer::Config::LABEL::two};
+        signal_emb = new embot::app::scope::SignalEViewer(ff); 
         // we init the two motors together. we cannot do one and not the other, so ...        
         static bool onceonly_initted {false};
                 
         if(false == onceonly_initted)
-        {
+        {   signal->on();
             amcfoc::Init_MOTOR(m);
             onceonly_initted = true;
+            signal->off();
         } 
         
 
         // and now the init that can be done multiple times 
         {
+             
             // i want to be sure that the pwm is not active       
             embot::hw::motor::pwm::deinit(m); 
+             signal_emb->on();         
+             // ok, we start pwm
+            embot::hw::motor::pwm::init(m, {});  
             // adc acquisition of the currents starts straigth away with ::init()
             embot::hw::motor::adc::init(m, {});         
             // then we init the encoder. we actually dont start acquisition because we do that in enc::start()            
-            embot::hw::motor::enc::init(m, {}); 
-            // same applies for hall 
-            embot::hw::motor::hall::init(m, {});               
-            // ok, we start pwm
-            embot::hw::motor::pwm::init(m, {});          
+//            embot::hw::motor::enc::init(m, {}); 
+//            // same applies for hall 
+//            embot::hw::motor::hall::init(m, {});               
+       
             // now we calibrate adc acquisition
-            embot::hw::motor::adc::calibrate(m, {});
+//            embot::hw::motor::adc::calibrate(m, {});
             // now we start analog acquisition
-            embot::hw::analog::init({});
-                
+//            embot::hw::analog::init({});
+            
+              // ok, we start pwm
+//            embot::hw::motor::pwm::init(m, {});   
             // we may calibrate also the encoder so that it is aligned w/ hall values
             // but maybe better do it later    
+                
+                
+                signal_emb->off();
         }            
-    
+
         
         return true;
     }
@@ -374,19 +397,19 @@ namespace embot::hw::motor::bldc::bsp::amcfoc {
         
         // timers
         
-        // tim2 is qenc
-        MX_TIM2_Init();
-        // tim3 is hall sensor
-        MX_TIM3_Init();
-        // tim4 is hall sensor
-        MX_TIM4_Init();
-        // tim5 is qenc
-        MX_TIM5_Init();
+//        // tim2 is qenc
+//        MX_TIM2_Init();
+//        // tim3 is hall sensor
+//        MX_TIM3_Init();
+//        // tim4 is hall sensor
+//        MX_TIM4_Init();
+//        // tim5 is qenc
+//        MX_TIM5_Init();
         // tim8 is motor::1
         MX_TIM8_Init();        
         // adc1 is 
         MX_ADC1_Init();
-        MX_ADC3_Init();
+//        MX_ADC3_Init();
         // tim1 is motor::2
         MX_TIM1_Init();
         MX_ADC2_Init();
@@ -549,7 +572,7 @@ void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
-  htim1.Init.Period = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod(); // 1023
+  htim1.Init.Period = 1024; //embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod(); // 1023
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 1;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -630,13 +653,13 @@ void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM2;
-  sConfigOC.Pulse = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofHIGHsampleoffset(); //1000;
+  sConfigOC.Pulse = 1000; // embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofHIGHsampleoffset(); //1000;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_5) != HAL_OK)
   {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofLOWsampleoffset(); // 24;
+  sConfigOC.Pulse = 24; //embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofLOWsampleoffset(); // 24;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_6) != HAL_OK)
   {
     Error_Handler();
@@ -890,7 +913,7 @@ void MX_TIM8_Init(void)
   htim8.Instance = TIM8;
   htim8.Init.Prescaler = 0;
   htim8.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
-  htim8.Init.Period = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod(); // 1023;
+  htim8.Init.Period = 1024; // embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofTIMperiod(); // 1023;
   htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim8.Init.RepetitionCounter = 1;
   htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -978,13 +1001,13 @@ void MX_TIM8_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM2;
-  sConfigOC.Pulse = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofHIGHsampleoffset(); // 1000;
+  sConfigOC.Pulse = 1000; // embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofHIGHsampleoffset(); // 1000;
   if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_5) != HAL_OK)
   {
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofLOWsampleoffset(); // 24;
+  sConfigOC.Pulse = 24; // embot::hw::motor::bldc::bsp::amcfoc::PWMvals.valueofLOWsampleoffset(); // 24;
   if (HAL_TIM_PWM_ConfigChannel(&htim8, &sConfigOC, TIM_CHANNEL_6) != HAL_OK)
   {
     Error_Handler();
@@ -1906,6 +1929,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(MOT2_CPHASE3_GPIO_Port, &GPIO_InitStruct);
 
+    
     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PA1, SYSCFG_SWITCH_PA1_OPEN);
 
     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PA0, SYSCFG_SWITCH_PA0_OPEN);
