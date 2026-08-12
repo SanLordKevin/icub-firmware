@@ -55,8 +55,9 @@ constexpr embot::core::relTime tickperiod = 1000*embot::core::time1millisec;
 
 // place in here what we enable
     
-#define ENABLE_HW_TEST_can
+//#define ENABLE_HW_TEST_can
 //#define ENABLE_HW_TEST_eeprom
+#define ENABLE_HW_TEST_i2c
 
 
 #endif
@@ -619,6 +620,71 @@ void test_eeprom_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void
 
 
 #endif
+
+
+
+#if defined(ENABLE_HW_TEST_i2c)
+
+#include "embot_hw_i2c.h"
+
+volatile uint8_t stophere = 0;
+
+
+
+//constexpr embot::os::Event evtEEPROMdo = embot::core::binary::mask::pos2mask<embot::os::Event>(4);
+
+void test_eeprom_init(embot::os::Thread *t, void *param)
+{
+    volatile uint32_t c = embot::hw::sys::clock(embot::hw::CLOCK::syscore);
+    c = c;
+
+    embot::hw::i2c::init(embot::hw:i2c::one, {}); 
+}
+
+constexpr size_t capacity {2048};
+uint8_t dd[capacity] = {0};
+//constexpr size_t adr2use {128 - 8};
+constexpr size_t adr2use {0};
+
+void test_eeprom_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void *param)
+{
+    if(0 == eventmask)
+    {   // timeout ...         
+        return;
+    }
+    
+    embot::core::TimeFormatter tf(embot::core::now());
+    
+    
+//    return;
+    
+    static size_t cnt = 0;
+    cnt++;
+
+    static uint8_t shift = 0;
+    size_t numberofbytes = capacity >> shift;
+    
+    if(shift>8)
+    {
+        shift = 0;
+    }
+    else
+    {
+        shift++;
+    }
+        
+
+     
+    stophere++;      
+
+    
+    
+}
+
+
+#endif
+
+
 
 #endif // #if defined(ENABLE_HW_TESTS)
 
