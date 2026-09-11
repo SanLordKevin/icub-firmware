@@ -31,7 +31,7 @@
 
 embot::app::scope::Signal *signal {nullptr};
 constexpr embot::os::Event evtTick = embot::core::binary::mask::pos2mask<embot::os::Event>(0);
-constexpr embot::core::relTime tickperiod = 1000*embot::core::time1millisec;
+constexpr embot::core::relTime tickperiod = 10*embot::core::time1millisec;
 
 //#define ENABLE_SPEED_TESTS
 
@@ -349,6 +349,13 @@ void test_eeprom_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void
 
 #endif
 
+#if defined(ENABLE_HW_TEST_i2c)
+
+void test_i2c_init(embot::os::Thread *t, void *param);
+void test_i2c_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void *param);
+
+#endif
+
 void test_HW_init(embot::os::Thread *t, void *param)
 {
     
@@ -359,6 +366,10 @@ void test_HW_init(embot::os::Thread *t, void *param)
 #if defined(ENABLE_HW_TEST_eeprom)
     test_eeprom_init(t, param);
 #endif    
+    
+#if defined(ENABLE_HW_TEST_i2c)
+    test_i2c_init(t, param);
+#endif  
     
 }
 
@@ -372,6 +383,10 @@ void test_HW_onevent(embot::os::Thread *t, embot::os::EventMask eventmask, void 
 #if defined(ENABLE_HW_TEST_eeprom)
     test_eeprom_tick(t, eventmask, param);
 #endif    
+    
+#if defined(ENABLE_HW_TEST_i2c)
+    test_i2c_tick(t, eventmask, param);
+#endif 
     
 }
 
@@ -622,67 +637,90 @@ void test_eeprom_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void
 #endif
 
 
-
 #if defined(ENABLE_HW_TEST_i2c)
 
 #include "embot_hw_i2c.h"
 
-volatile uint8_t stophere = 0;
-
-
-
-//constexpr embot::os::Event evtEEPROMdo = embot::core::binary::mask::pos2mask<embot::os::Event>(4);
-
-void test_eeprom_init(embot::os::Thread *t, void *param)
+namespace
 {
-    volatile uint32_t c = embot::hw::sys::clock(embot::hw::CLOCK::syscore);
-    c = c;
+    constexpr uint32_t actionsRate {100}; // 100 × tickperiod
+    uint32_t timepassed {0};
 
-    embot::hw::i2c::init(embot::hw:i2c::one, {}); 
+    constexpr std::array<embot::hw::I2C, 2> i2cBuses
+    {
+        embot::hw::I2C::one,
+        embot::hw::I2C::two
+    };
+
+    constexpr embot::hw::i2c::Config i2cConfig {};
+
+    // Standard 7-bit I2C addresses to test.
+    constexpr std::array<embot::hw::i2c::ADR, 1> addressesToTest
+    {
+        0x6A  //address of onboard IMU
+        // Add other addresses here.
+    };
+
+    constexpr embot::core::relTime pingTimeout  {3 * embot::core::time1millisec};
+
+    void pingAddresses()
+    {
+        for(size_t busIndex = 0; busIndex < i2cBuses.size(); ++busIndex)
+        {
+            const auto bus = i2cBuses[busIndex];
+            for(const auto address7bit : addressesToTest)
+            {
+                // embot_hw_i2c passes the address directly to STM32 HAL.
+                const auto addressToPing = static_cast<embot::hw::i2c::ADR>(address7bit << 1);
+
+                const bool responds = embot::hw::i2c::ping(bus, addressToPing, pingTimeout);
+
+                char message[96] {};
+                std::snprintf(
+                    message,
+                    sizeof(message),
+                    "I2C channel #%u address 0x%02X: %s",
+                    static_cast<unsigned>(busIndex + 1),
+                    static_cast<unsigned>(address7bit),
+                    responds ? "RESPONDING" : "NOT RESPONDING"
+                );
+
+                embot::core::print(message);
+            }
+        }
+    }
 }
 
-constexpr size_t capacity {2048};
-uint8_t dd[capacity] = {0};
-//constexpr size_t adr2use {128 - 8};
-constexpr size_t adr2use {0};
 
-void test_eeprom_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void *param)
+void test_i2c_init(embot::os::Thread *t, void *param)
 {
-    if(0 == eventmask)
-    {   // timeout ...         
+    for(const auto bus : i2cBuses)
+    {
+        embot::hw::i2c::init(bus, i2cConfig);
+    }
+}
+
+
+void test_i2c_tick(embot::os::Thread *t, embot::os::EventMask eventmask, void *param)
+{
+    if(false == embot::core::binary::mask::check(eventmask, evtTick))
+    {
         return;
     }
-    
-    embot::core::TimeFormatter tf(embot::core::now());
-    
-    
-//    return;
-    
-    static size_t cnt = 0;
-    cnt++;
 
-    static uint8_t shift = 0;
-    size_t numberofbytes = capacity >> shift;
-    
-    if(shift>8)
+    if(++timepassed >= actionsRate)
     {
-        shift = 0;
-    }
-    else
-    {
-        shift++;
-    }
-        
+        timepassed = 0;
 
-     
-    stophere++;      
+        embot::core::print("Starting I2C address test");
 
-    
-    
+        pingAddresses();
+
+        embot::core::print("Ending I2C address test");
+    }
 }
 
-
-#endif
+#endif // defined(ENABLE_HW_TEST_i2c)
 
 
 

@@ -258,8 +258,8 @@ extern "C"
     if(i2cHandle->Instance==I2C1)
     {
 
-    /** Initializes the peripherals clock
-     */
+        /** Initializes the peripherals clock
+        */
         PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
         PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
